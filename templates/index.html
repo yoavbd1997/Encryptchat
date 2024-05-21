@@ -1,0 +1,118 @@
+ <!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Encrypt Chat</title>
+        <style>
+         body {
+             font-family: 'Arial', sans-serif;
+             margin: 20px;
+             text-align: center;
+             background-color: #f0f0f0;
+         }
+
+         h1 {
+             color: #333;
+         }
+
+         #name-section {
+             display: flex;
+             align-items: center;
+             justify-content: center;
+         }
+         #shift-section{
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             margin-right:6px
+         }
+         h3 {
+             color: #333;
+             margin-right: 10px; /* Adjust margin for spacing */
+         }
+
+         input {
+             padding: 8px;
+             font-size: 14px;
+             width: 120px;
+             margin-bottom: 10px;
+         }
+
+         button {
+             cursor: pointer;
+             background-color: #4caf50;
+             color: #fff;
+             border: none;
+             border-radius: 4px;
+             padding: 10px 15px;
+             font-size: 16px;
+             margin-top: 10px;
+         }
+
+         button:hover {
+            background-color: #29682a;
+            border-color: var(--color-light);
+            transform: translateY(-0.2rem);
+         }
+     </style>
+    </head>
+    <body>
+        <h1>Welcome to Encrypt Chat!</h1>
+
+        <div id="name-section">
+            <h3>Enter Your Name:</h3>
+            <input type="text" id="name" placeholder="Name">
+        </div>
+
+        <div id="shift-section">
+            <h3>Enter Your Shift:</h3>
+            <input type="text" id="shift" placeholder="Shift">
+        </div>
+
+        <button id="joinChat">Join</button>
+
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+        <script>
+            $(document).ready(function () {
+                // When the 'joinChat' button is clicked
+                $("#joinChat").on("click", function () {
+                    // Get the values of the username and shift input fields
+                    var username = $("#name").val();
+                    var shift = $("#shift").val();
+        
+                    // Check if shift is a number
+                    if (isNaN(shift) || shift=="") {
+                        // Alert the user and stop further execution
+                        alert("Shift must be a number!");
+                        return;  // Stop further execution
+                    }
+        
+                    // Check if the username is empty
+                    if(username=="") {
+                        // Alert the user and stop further execution
+                        alert("Must be a name!");
+                        return;  
+                    }
+        
+                    // Construct the URL for the chat page
+                    var chatUrl = "{{ url_for('chat') }}";
+        
+                    // Append the username and shift as query parameters to the URL
+                    //The ? indicates the beginning of the query string
+                    //The & separates different parameters in the query string.
+                    chatUrl += "?username=" + encodeURIComponent(username) + "&shift=" + encodeURIComponent(shift);
+        
+                    // Redirect the user to the chat page with the username and shift as parameters
+                    window.location.href = chatUrl;
+                });
+            });
+        </script>
+
+    </body>
+</html>

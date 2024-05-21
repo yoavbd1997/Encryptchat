@@ -1,0 +1,187 @@
+<!-- chat.html -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Encrypt Chat Room</title>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+        <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            background-color: #f9f9f9; /* Light background color */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        input {
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #29682a;
+            border-color: var(--color-light);
+            transform: translateY(-0.2rem);
+        }
+
+        #decryptB {
+            background-color: #2196F3;
+            cursor: pointer;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #decryptB:hover {
+            background-color: #0906b6;
+            border-color: var(--color-light);
+            transform: translateY(-0.2rem);
+        }
+    </style>
+    </head>
+    <body>
+        <div id="container">
+            <h2>Welcome to the Chat Room, <span id="username"></span>!</h2>
+            <div id="messages"></div>
+            <input type="text" id="message" placeholder="Type your message...">
+            <button id="sendB">Send</button>
+            <button id="backButton">Back to Home</button>
+            <button id="decryptB">Decrypt</button>
+        </div>
+
+        <script>
+        // Define the Caesar Cipher encryption function
+        function encrypt_caesar(message, shift) {
+            let encryptedMessage = "";
+            for (let i = 0; i < message.length; i++) {
+                let char = message[i];
+                if (char.match(/[a-z]/i)) {
+                    let code = message.charCodeAt(i);
+                    let isUpper = (code >= 65 && code <= 90);
+                    let shifted = code + shift;
+                    if ((isUpper && shifted > 90) || (!isUpper && shifted > 122)) {
+                        shifted -= 26;
+                    } else if ((isUpper && shifted < 65) || (!isUpper && shifted < 97)) {
+                        shifted += 26;
+                    }
+                    encryptedMessage += String.fromCharCode(shifted);
+                } else {
+                    encryptedMessage += char;
+                }
+            }
+            return encryptedMessage;
+        }
+        
+        // Define the Caesar Cipher decryption function
+        function decrypt_caesar(encryptedMessage, shift) {
+            let decryptedMessage = "";
+            for (let i = 0; i < encryptedMessage.length; i++) {
+                let char = encryptedMessage[i];
+                if (char.match(/[a-z]/i)) {
+                    let code = encryptedMessage.charCodeAt(i);
+                    let isUpper = (code >= 65 && code <= 90);
+                    let shifted = code - shift;
+                    if ((isUpper && shifted > 90) || (!isUpper && shifted > 122)) {
+                        shifted -= 26;
+                    } else if ((isUpper && shifted < 65) || (!isUpper && shifted < 97)) {
+                        shifted += 26;
+                    }
+                    decryptedMessage += String.fromCharCode(shifted);
+                } else {
+                    decryptedMessage += char;
+                }
+            }
+            return decryptedMessage;
+        }
+        
+        $(document).ready(function(){
+            // Get username and shift from query parameters
+            var urlParams = new URLSearchParams(window.location.search);
+            var username = urlParams.get('username');
+            var shift = urlParams.get('shift');
+            
+            // Display the username in the chat room
+            $("#username").text(username);
+        
+            // Connect to the WebSocket server
+            var socket = io.connect("http://127.0.0.1:5000");
+        
+            // When the socket is connected
+            socket.on('connect', function(){
+                console.log("Socket connected!");
+                // Send a message indicating that the user has joined the chat
+                socket.send(username + " joined the chat!");
+            });
+        
+            // When the send button is clicked
+            $("#sendB").on("click", function(){
+                var message = $("#message").val();
+                
+                // Encrypt the message using the Caesar cipher with the provided shift
+                socket.send(username + ": " + encrypt_caesar(message, parseInt(shift))); 
+                $("#message").val(""); // Clear the message input field after sending
+            });
+        
+            // When a message is received from the server
+            socket.on('message', function(msg){
+                // Display the received message
+                $("#messages").append("<p>" + msg + "</p>");
+            });
+        
+            // When the decrypt button is clicked
+            $("#decryptB").on("click", function(){
+                var encryptedMessage = $("#message").val();
+                // Decrypt the message using the Caesar cipher with the provided shift
+                alert("Decrypted Message: " + decrypt_caesar(encryptedMessage, parseInt(shift)));
+            });
+        
+            // When the back button is clicked
+            $("#backButton").on("click", function(){
+                // Redirect the user back to the index page
+                window.location.href = "{{ url_for('index') }}";
+            });
+        });
+        
+    </script>
+    </body>
+</html>
